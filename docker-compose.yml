@@ -1,0 +1,40 @@
+﻿version: '3.8'
+
+services:
+  # PostgreSQL контейнер
+  postgres:
+    image: postgres:15-alpine
+    container_name: diploma_postgres
+    environment:
+      POSTGRES_DB: diploma_db
+      POSTGRES_USER: diploma_user
+      POSTGRES_PASSWORD: diploma_password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  # Backend сервер (Node.js/Express пример)
+  backend:
+    build: .
+    container_name: diploma_backend
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: diploma_db
+      DB_USER: diploma_user
+      DB_PASSWORD: diploma_password123
+      NODE_ENV: development
+    depends_on:
+      - postgres
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  postgres_data:
